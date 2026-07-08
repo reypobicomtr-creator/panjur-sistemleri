@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone, Shield } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { scrollToSection } from '@/utils/scrollTo';
 
 export default function Header() {
+  const { config } = useSiteConfig();
+  const { site } = config;
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -22,10 +24,8 @@ export default function Header() {
     { label: 'İletişim', section: 'contact' },
   ];
 
-  // Support both "PanjurMax" and custom brand names for the split logo display
-  const brandParts = SITE.brandName.match(/^(.+?)([A-Z][a-z]+)?$/) || [SITE.brandName, SITE.brandName, ''];
-  const brandStart = SITE.brandName.slice(0, Math.ceil(SITE.brandName.length / 2));
-  const brandEnd = SITE.brandName.slice(Math.ceil(SITE.brandName.length / 2));
+  const brandStart = site.brandName.slice(0, Math.ceil(site.brandName.length / 2));
+  const brandEnd = site.brandName.slice(Math.ceil(site.brandName.length / 2));
 
   return (
     <header
@@ -41,12 +41,12 @@ export default function Header() {
           <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
             <span className="flex items-center gap-1.5">
               <Phone className="w-3 h-3" />
-              {SITE.phone.display}
+              {site.phone.display}
             </span>
             <span className="hidden sm:block">Ücretsiz keşif ve ölçü hizmeti</span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-3 h-3" />
-              {SITE.hero.perks[1]}
+              {site.hero.perks[1]}
             </span>
           </div>
         </div>

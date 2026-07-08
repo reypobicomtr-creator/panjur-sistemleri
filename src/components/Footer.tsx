@@ -1,5 +1,5 @@
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { scrollToSection } from '@/utils/scrollTo';
 
 interface Props {
@@ -8,7 +8,9 @@ interface Props {
 }
 
 export default function Footer({ onPrivacyClick, onTermsClick }: Props) {
-  const brandParts = [SITE.brandName.slice(0, Math.ceil(SITE.brandName.length / 2)), SITE.brandName.slice(Math.ceil(SITE.brandName.length / 2))];
+  const { config } = useSiteConfig();
+  const { site } = config;
+  const brandParts = [site.brandName.slice(0, Math.ceil(site.brandName.length / 2)), site.brandName.slice(Math.ceil(site.brandName.length / 2))];
 
   return (
     <footer className="bg-gray-900 text-gray-400">
@@ -31,20 +33,20 @@ export default function Footer({ onPrivacyClick, onTermsClick }: Props) {
               </span>
             </a>
             <p className="text-sm leading-relaxed mb-5">
-              {SITE.footer.description}
+              {site.footer.description}
             </p>
             <div className="space-y-2">
-              <a href={`tel:${SITE.phone.raw}`} className="flex items-center gap-2 text-sm hover:text-white transition-colors">
+              <a href={`tel:${site.phone.raw}`} className="flex items-center gap-2 text-sm hover:text-white transition-colors">
                 <Phone className="w-4 h-4 text-brand-400" />
-                {SITE.phone.display}
+                {site.phone.display}
               </a>
-              <a href={`mailto:${SITE.email.primary}`} className="flex items-center gap-2 text-sm hover:text-white transition-colors">
+              <a href={`mailto:${site.email.primary}`} className="flex items-center gap-2 text-sm hover:text-white transition-colors">
                 <Mail className="w-4 h-4 text-brand-400" />
-                {SITE.email.primary}
+                {site.email.primary}
               </a>
               <span className="flex items-center gap-2 text-sm">
                 <MapPin className="w-4 h-4 text-brand-400 shrink-0" />
-                {SITE.address.district}, {SITE.address.city}
+                {site.address.district}, {site.address.city}
               </span>
             </div>
           </div>
@@ -53,7 +55,7 @@ export default function Footer({ onPrivacyClick, onTermsClick }: Props) {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Ürünlerimiz</h4>
             <ul className="space-y-2.5">
-              {SITE.footer.products.map((item) => (
+              {site.footer.products.map((item) => (
                 <li key={item}>
                   <a href="#services" onClick={(e) => scrollToSection(e, 'services')} className="text-sm hover:text-white transition-colors">
                     {item}
@@ -67,7 +69,7 @@ export default function Footer({ onPrivacyClick, onTermsClick }: Props) {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Hizmetler</h4>
             <ul className="space-y-2.5">
-              {SITE.footer.services.map((item) => (
+              {site.footer.services.map((item) => (
                 <li key={item}>
                   <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="text-sm hover:text-white transition-colors">
                     {item}
@@ -101,7 +103,7 @@ export default function Footer({ onPrivacyClick, onTermsClick }: Props) {
 
         {/* Bottom bar */}
         <div className="border-t border-gray-800 py-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
-          <p>© {new Date().getFullYear()} {SITE.brandName}. Tüm hakları saklıdır.</p>
+          <p>© {new Date().getFullYear()} {site.brandName}. Tüm hakları saklıdır.</p>
           <div className="flex gap-4">
             <button onClick={onPrivacyClick} className="hover:text-white transition-colors">Gizlilik Politikası</button>
             <button onClick={onTermsClick} className="hover:text-white transition-colors">Kullanım Koşulları</button>

@@ -1,8 +1,10 @@
 import { ArrowRight, Phone } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { scrollToSection } from '@/utils/scrollTo';
 
 export default function CTA() {
+  const { config } = useSiteConfig();
+  const { site } = config;
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -22,11 +24,11 @@ export default function CTA() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href={`tel:${SITE.phone.raw}`}
+                href={`tel:${site.phone.raw}`}
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-brand-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
               >
                 <Phone className="w-4 h-4" />
-                {SITE.phone.display}
+                {site.phone.display}
               </a>
               <a
                 href="#calculator"

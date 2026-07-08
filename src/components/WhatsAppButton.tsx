@@ -1,8 +1,10 @@
 import { MessageCircle } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 export default function WhatsAppButton() {
-  const waUrl = `https://wa.me/${SITE.whatsapp.number}?text=${encodeURIComponent(SITE.whatsapp.message)}`;
+  const { config } = useSiteConfig();
+  const { site } = config;
+  const waUrl = `https://wa.me/${site.whatsapp.number}?text=${encodeURIComponent(site.whatsapp.message)}`;
 
   return (
     <a

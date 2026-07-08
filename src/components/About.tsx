@@ -1,10 +1,12 @@
 import { Award, Users, Clock, Truck } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 const iconMap: Record<string, typeof Award> = { Award, Users, Clock, Truck };
 
 export default function About() {
-  const { about } = SITE;
+  const { config } = useSiteConfig();
+  const { site } = config;
+  const { about } = site;
   const yearsActive = new Date().getFullYear() - about.foundedYear;
 
   return (
@@ -16,7 +18,7 @@ export default function About() {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src="https://images.pexels.com/photos/3284980/pexels-photo-3284980.png?auto=compress&cs=tinysrgb&fit=crop&h=700&w=800"
-                alt={`${SITE.brandName} modern iç mekan panjur uygulaması`}
+                alt={`${site.brandName} modern iç mekan panjur uygulaması`}
                 loading="lazy"
                 width="800"
                 height="700"

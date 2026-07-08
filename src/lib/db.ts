@@ -121,3 +121,16 @@ export async function markContactRead(id: number): Promise<void> {
 export async function deleteContact(id: number): Promise<void> {
   await supabase.from('contacts').delete().eq('id', id);
 }
+
+/* ─── Pricing Config ───────────────────────── */
+
+import type { PricingConfigData } from './config';
+
+export async function getPricingConfig(): Promise<PricingConfigData | null> {
+  const { data } = await supabase.from('pricing_config').select('data').eq('id', 1).maybeSingle();
+  return (data as { data: PricingConfigData } | null)?.data ?? null;
+}
+
+export async function updatePricingConfig(data: PricingConfigData): Promise<void> {
+  await supabase.from('pricing_config').upsert({ id: 1, data, updated_at: new Date().toISOString() });
+}

@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, RotateCcw, Info } from 'lucide-react';
 import type { ShutterType, ControlType, CaseType, ColorGroup, FormState, PriceBreakdown } from '@/utils/pricing';
-import { calculatePrice, PRODUCT_NAMES, CASE_NAMES, PRICE_INFO_TEXT } from '@/utils/pricing';
-import { SITE } from '@/config/site';
+import { calculatePrice, PRODUCT_NAMES, CASE_NAMES, getPriceInfoText } from '@/utils/pricing';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 interface Message {
   from: 'bot' | 'user';
@@ -136,8 +136,8 @@ const OLD_SHUTTER_OPTIONS = [
   { label: '❌ Hayır, ilk kez takılacak', value: 'no' },
 ];
 
-const FINAL_OPTIONS = [
-  { label: `📞 Hemen Arayın: ${SITE.phone.display}`, value: 'call' },
+const FINAL_OPTIONS = (display: string) => [
+  { label: `📞 Hemen Arayın: ${display}`, value: 'call' },
   { label: '📋 WhatsApp ile Teklif Al', value: 'whatsapp' },
   { label: '🔄 Yeni Hesaplama Yap', value: 'reset' },
 ];
@@ -156,6 +156,8 @@ const EMPTY_FORM: FormState = {
 };
 
 export default function Calculator() {
+  const { config } = useSiteConfig();
+  const { site } = config;
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -303,12 +305,12 @@ export default function Calculator() {
 
     setTimeout(() => {
       const updatedForm: FormState = { ...form, floor: String(f), step: 8 };
-      const price = calculatePrice(updatedForm);
+      const price = calculatePrice(updatedForm, config.pricing, config.products);
 
       addBotMessage('', undefined, undefined, true, price);
 
       setTimeout(() => {
-        addBotMessage('Nasıl devam etmek istersiniz?', FINAL_OPTIONS);
+        addBotMessage('Nasıl devam etmek istersiniz?', FINAL_OPTIONS(site.phone.display));
       }, 1000);
     }, 500);
   };
@@ -317,12 +319,12 @@ export default function Calculator() {
     if (value === 'call') {
       addUserMessage('Telefon ile arayacağım');
       setTimeout(() => {
-        addBotMessage(`📞 Bizi hemen arayabilirsiniz:\n\n${SITE.phone.display}\n${SITE.phone.secondary}\n\n🕐 Çalışma saatleri:\n${SITE.workingHours.days} ${SITE.workingHours.hours}\n\nGörüşmek üzere! 😊`);
+        addBotMessage(`📞 Bizi hemen arayabilirsiniz:\n\n${site.phone.display}\n${site.phone.secondary}\n\n🕐 Çalışma saatleri:\n${site.workingHours.days} ${site.workingHours.hours}\n\nGörüşmek üzere! 😊`);
       }, 300);
     } else if (value === 'whatsapp') {
       addUserMessage('WhatsApp ile yazacağım');
       setTimeout(() => {
-        addBotMessage(`📱 WhatsApp hattımız:\nwa.me/${SITE.whatsapp.number}\n\nMesajınıza hesaplama sonucunuzu ekleyerek gönderirseniz daha hızlı dönüş yapabiliriz! 😊`);
+        addBotMessage(`📱 WhatsApp hattımız:\nwa.me/${site.whatsapp.number}\n\nMesajınıza hesaplama sonucunuzu ekleyerek gönderirseniz daha hızlı dönüş yapabiliriz! 😊`);
       }, 300);
     } else {
       resetChat();
@@ -500,15 +502,20 @@ export default function Calculator() {
               <div className="bg-brand-50 border-b border-brand-200 px-5 py-4 text-xs text-gray-600 space-y-2">
                 <div className="font-semibold text-brand-700 text-sm">Fiyatlandırma Nasıl Hesaplanır?</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <span>• Alüminyum:</span><span className="text-right">2.250 ₺/m²</span>
-                  <span>• PVC:</span><span className="text-right">1.650 ₺/m²</span>
-                  <span>• Motorlu:</span><span className="text-right">2.750 ₺/m²</span>
-                  <span>• Güvenlik:</span><span className="text-right">3.450 ₺/m²</span>
+                  {config.products.map((p) => (
+                    <React.Fragment key={p.type}>
+                      <span>• {p.name}:</span>
+                      <span className="text-right">{p.base_price.toLocaleString('tr-TR')} ₺/m²</span>
+                    </React.Fragment>
+                  ))}
                 </div>
                 <p className="text-gray-500 pt-1">
                   + Kasa tipi, motor, renk, montaj işçiliği, kat ve söküm ücretleri ayrıca eklenir.
-                  1.5 m² üzeri alanda %8, 3 m² üzeri alanda %15 malzeme indirimi uygulanır.
-                  5+ adette %5 toplu sipariş indirimi.
+                  {config.pricing.discounts.areaDiscounts.filter((d) => d.rate > 0).map((d) => {
+                    const upper = d.maxArea >= 999 ? 'üzeri' : `${d.maxArea} m²'ye kadar`;
+                    return ` ${d.minArea} – ${upper} alanda %${(d.rate * 100).toFixed(0)} malzeme indirimi.`;
+                  })}
+                  {config.pricing.discounts.bulkDiscountThreshold}+ adette %{(config.pricing.discounts.bulkDiscountRate * 100).toFixed(0)} toplu sipariş indirimi.
                 </p>
                 <button onClick={() => setShowPriceInfo(false)} className="text-brand-600 font-medium">Kapat</button>
               </div>

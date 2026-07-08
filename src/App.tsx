@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { SiteConfigProvider } from '@/contexts/SiteConfigContext';
 import { useState } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -55,6 +56,7 @@ export default function App() {
   return (
     <HashRouter>
       <AuthProvider>
+        <SiteConfigProvider>
         <Routes>
           <Route path="/" element={<PublicLayout />} />
           <Route path="/admin/login" element={<Login />} />
@@ -68,6 +70,7 @@ export default function App() {
           </Route>
           <Route path="*" element={<PublicLayout />} />
         </Routes>
+        </SiteConfigProvider>
       </AuthProvider>
     </HashRouter>
   );

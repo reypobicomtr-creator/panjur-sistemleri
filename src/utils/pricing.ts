@@ -2,6 +2,9 @@
    PanjurMax — Fiyat Hesaplama Motoru
    ═══════════════════════════════════════════════════ */
 
+import type { PricingConfigData } from '@/lib/config';
+import type { Product } from '@/lib/db';
+
 export type ShutterType = 'aluminium' | 'pvc' | 'motorlu' | 'guvenlik';
 export type ControlType = 'manuel' | 'motorlu';
 export type ColorGroup = 'standart' | 'ozel';
@@ -47,24 +50,13 @@ export interface PriceBreakdown {
 }
 
 /* ──────────────────────────────────────────────
-   Birim Fiyat Tablosu (₺/m²)
+   Ürün Adları (sabit display labels)
    ────────────────────────────────────────────── */
-const BASE_PRICES: Record<ShutterType, number> = {
-  aluminium: 2250,
-  pvc: 1650,
-  motorlu: 2750,
-  guvenlik: 3450,
-};
-
-const MIN_MATERIAL_COST = 1200;
-
-/* ──────────────────────────────────────────────
-   Kasa Tipleri
-   ────────────────────────────────────────────── */
-const CASE_PRICES: Record<CaseType, number> = {
-  siva_ustu: 0,
-  siva_alti: 450,
-  mini: 650,
+export const PRODUCT_NAMES: Record<ShutterType, string> = {
+  aluminium: 'Alüminyum Panjur',
+  pvc: 'PVC Panjur',
+  motorlu: 'Motorlu Panjur',
+  guvenlik: 'Güvenlik Panjuru',
 };
 
 export const CASE_NAMES: Record<CaseType, string> = {
@@ -74,44 +66,29 @@ export const CASE_NAMES: Record<CaseType, string> = {
 };
 
 /* ──────────────────────────────────────────────
-   Ek Ücretler
+   Yardımcı: base m² fiyatını ürün listesinden bul
    ────────────────────────────────────────────── */
-const MOTOR_EXTRA = 1450;
-const SPECIAL_COLOR_EXTRA = 480;
-const BASE_LABOR = 350;
-const FLOOR_EXTRA_PER = 120;
-const REMOVAL_COST = 200;
-
-/* ──────────────────────────────────────────────
-   İndirim & KDV
-   ────────────────────────────────────────────── */
-const BULK_DISCOUNT_THRESHOLD = 5;
-const BULK_DISCOUNT_RATE = 0.05;
-const KDV_RATE = 0.20;
-
-/* ──────────────────────────────────────────────
-   Ürün Adları
-   ────────────────────────────────────────────── */
-export const PRODUCT_NAMES: Record<ShutterType, string> = {
-  aluminium: 'Alüminyum Panjur',
-  pvc: 'PVC Panjur',
-  motorlu: 'Motorlu Panjur',
-  guvenlik: 'Güvenlik Panjuru',
-};
+function getBasePrice(products: Product[], shutterType: ShutterType): number {
+  const found = products.find((p) => p.type === shutterType);
+  return found ? found.base_price : 0;
+}
 
 /* ──────────────────────────────────────────────
    Alan bazlı kademe indirimi
    ────────────────────────────────────────────── */
-function getAreaDiscount(area: number): number {
-  if (area > 3) return 0.15;
-  if (area > 1.5) return 0.08;
-  return 0;
+function getAreaDiscount(area: number, discounts: PricingConfigData['discounts']): number {
+  const tier = discounts.areaDiscounts.find((d) => area >= d.minArea && area < d.maxArea);
+  return tier ? tier.rate : 0;
 }
 
 /* ──────────────────────────────────────────────
-   Ana hesaplama fonksiyonu
+   Ana hesaplama fonksiyonu (artık config parametresi alır)
    ────────────────────────────────────────────── */
-export function calculatePrice(form: FormState): PriceBreakdown {
+export function calculatePrice(
+  form: FormState,
+  pricing: PricingConfigData,
+  products: Product[],
+): PriceBreakdown {
   const w = parseInt(form.width) / 100; // cm → m
   const h = parseInt(form.height) / 100;
   const area = w * h;
@@ -120,33 +97,36 @@ export function calculatePrice(form: FormState): PriceBreakdown {
   const shutterType = form.shutterType as ShutterType;
   const hasOld = form.hasOldShutter === true;
 
+  const { extraCosts, discounts } = pricing;
+
   // 1) Malzeme fiyatı (kademeli)
-  const basePerM2 = BASE_PRICES[shutterType];
-  const areaDiscount = getAreaDiscount(area);
+  const basePerM2 = getBasePrice(products, shutterType);
+  const areaDiscount = getAreaDiscount(area, discounts);
   const effectivePerM2 = basePerM2 * (1 - areaDiscount);
-  let baseMaterialCost = Math.max(effectivePerM2 * area, MIN_MATERIAL_COST);
+  let baseMaterialCost = Math.max(effectivePerM2 * area, extraCosts.minMaterialCost);
   baseMaterialCost = Math.round(baseMaterialCost);
 
   // 2) Kasa tipi
-  const caseCost = CASE_PRICES[form.caseType as CaseType];
+  const caseTypeConfig = pricing.caseTypes.find((c) => c.id === form.caseType);
+  const caseCost = caseTypeConfig ? caseTypeConfig.price : 0;
 
   // 3) Motor (sadece motorlu panjur harici)
   let motorCost = 0;
   if (form.controlType === 'motorlu' && shutterType !== 'motorlu') {
-    motorCost = MOTOR_EXTRA;
+    motorCost = extraCosts.motorExtra;
   }
 
   // 4) Renk
-  const colorCost = form.colorGroup === 'ozel' ? SPECIAL_COLOR_EXTRA : 0;
+  const colorCost = form.colorGroup === 'ozel' ? extraCosts.specialColorExtra : 0;
 
   // 5) Montaj işçiliği (sabit)
-  const laborCost = BASE_LABOR;
+  const laborCost = extraCosts.baseLabor;
 
   // 6) Kat ek ücreti (3. kattan sonra)
-  const floorCost = f > 3 ? (f - 3) * FLOOR_EXTRA_PER : 0;
+  const floorCost = f > 3 ? (f - 3) * extraCosts.floorExtraPer : 0;
 
   // 7) Eski panjur söküm
-  const removalCost = hasOld ? REMOVAL_COST : 0;
+  const removalCost = hasOld ? extraCosts.removalCost : 0;
 
   // Birim toplam
   const unitTotal = baseMaterialCost + caseCost + motorCost + colorCost + laborCost + floorCost + removalCost;
@@ -157,14 +137,14 @@ export function calculatePrice(form: FormState): PriceBreakdown {
   // 8) Adet indirimi
   let discountApplied = false;
   let discountAmount = 0;
-  if (q >= BULK_DISCOUNT_THRESHOLD) {
+  if (q >= discounts.bulkDiscountThreshold) {
     discountApplied = true;
-    discountAmount = Math.round(subtotal * BULK_DISCOUNT_RATE);
+    discountAmount = Math.round(subtotal * discounts.bulkDiscountRate);
     subtotal -= discountAmount;
   }
 
   // 9) KDV
-  const kdv = Math.round(subtotal * KDV_RATE);
+  const kdv = Math.round(subtotal * discounts.kdvRate);
   const grandTotal = subtotal + kdv;
 
   return {
@@ -175,7 +155,7 @@ export function calculatePrice(form: FormState): PriceBreakdown {
     quantity: q,
     controlLabel: form.controlType === 'motorlu' ? 'Motorlu Kumanda' : 'Manuel (Kayış)',
     colorLabel: form.colorGroup === 'ozel' ? 'RAL Özel Renk' : 'Standart Renk',
-    caseLabel: CASE_NAMES[form.caseType as CaseType],
+    caseLabel: caseTypeConfig ? caseTypeConfig.name : '',
     floor: f,
     hasOldShutter: hasOld,
     baseMaterialCost,
@@ -195,16 +175,33 @@ export function calculatePrice(form: FormState): PriceBreakdown {
 }
 
 /* ──────────────────────────────────────────────
-   Fiyat bilgisi özet metni (panelde gösterim için)
+   Fiyat bilgisi özet metni (dinamik)
    ────────────────────────────────────────────── */
-export const PRICE_INFO_TEXT = `
-  Malzeme (m² başına):
-  • Alüminyum: 2.250 ₺/m²
-  • PVC: 1.650 ₺/m²
-  • Motorlu: 2.750 ₺/m²
-  • Güvenlik: 3.450 ₺/m²
+export function getPriceInfoText(products: Product[], pricing: PricingConfigData): string {
+  const productLines = products
+    .map((p) => `  • ${p.name}: ${formatPrice(p.base_price)}/m²`)
+    .join('\n');
 
-  1.5 m² üzeri %8, 3 m² üzeri %15 indirim.
-  5+ adette %5 toplu indirim.
-  Tüm fiyatlara %20 KDV eklenir.
-`;
+  const areaLines = pricing.discounts.areaDiscounts
+    .filter((d) => d.rate > 0)
+    .map((d) => {
+      const upper = d.maxArea >= 999 ? 'üzeri' : `${d.maxArea} m²'ye kadar`;
+      return `  ${d.minArea} – ${upper}: %${(d.rate * 100).toFixed(0)} indirim`;
+    })
+    .join('\n');
+
+  return `
+  Malzeme (m² başına):
+${productLines}
+
+  Alan indirimi:
+${areaLines}
+
+  ${pricing.discounts.bulkDiscountThreshold}+ adette %${(pricing.discounts.bulkDiscountRate * 100).toFixed(0)} toplu indirim.
+  Tüm fiyatlara %${(pricing.discounts.kdvRate * 100).toFixed(0)} KDV eklenir.
+  `;
+}
+
+function formatPrice(n: number): string {
+  return n.toLocaleString('tr-TR') + ' ₺';
+}

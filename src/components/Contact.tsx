@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 
 interface FormData {
   name: string;
@@ -14,6 +14,8 @@ type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 const INITIAL_FORM: FormData = { name: '', phone: '', email: '', message: '' };
 
 export default function Contact() {
+  const { config } = useSiteConfig();
+  const { site } = config;
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
 
@@ -26,7 +28,7 @@ export default function Contact() {
     setSubmitState('submitting');
 
     try {
-      const res = await fetch(SITE.contact.formspreeEndpoint, {
+      const res = await fetch(site.contact.formspreeEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -45,22 +47,22 @@ export default function Contact() {
     {
       icon: MapPin,
       title: 'Adres',
-      lines: SITE.address.full.split(', '),
+      lines: site.address.full.split(', '),
     },
     {
       icon: Phone,
       title: 'Telefon',
-      lines: [SITE.phone.display, SITE.phone.secondary],
+      lines: [site.phone.display, site.phone.secondary],
     },
     {
       icon: Mail,
       title: 'E-posta',
-      lines: [SITE.email.primary, SITE.email.secondary],
+      lines: [site.email.primary, site.email.secondary],
     },
     {
       icon: Clock,
       title: 'Çalışma Saatleri',
-      lines: [SITE.workingHours.days, SITE.workingHours.hours],
+      lines: [site.workingHours.days, site.workingHours.hours],
     },
   ];
 
@@ -104,8 +106,8 @@ export default function Contact() {
           {/* Contact form */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">{SITE.contact.formHeading}</h3>
-              <p className="text-sm text-gray-500 mb-6">{SITE.contact.formSubtext}</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{site.contact.formHeading}</h3>
+              <p className="text-sm text-gray-500 mb-6">{site.contact.formSubtext}</p>
 
               {submitState === 'success' ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">

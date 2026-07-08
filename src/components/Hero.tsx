@@ -1,11 +1,13 @@
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { useSiteConfig } from '@/contexts/SiteConfigContext';
 import { scrollToSection } from '@/utils/scrollTo';
 
 const HERO_IMG = 'https://images.pexels.com/photos/28337819/pexels-photo-28337819.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=900&w=1600';
 
 export default function Hero() {
-  const { hero } = SITE;
+  const { config } = useSiteConfig();
+  const { site } = config;
+  const { hero } = site;
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
@@ -13,7 +15,7 @@ export default function Hero() {
       <div className="absolute inset-0">
         <img
           src={HERO_IMG}
-          alt={`${SITE.brandName} modern panjur uygulaması`}
+          alt={`${site.brandName} modern panjur uygulaması`}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-brand-950/90 via-brand-900/75 to-brand-950/50" />
@@ -31,7 +33,7 @@ export default function Hero() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight animate-fade-in-up animation-delay-200">
-            <span className="text-warm-300">{SITE.brandName}</span> ile {hero.title}
+            <span className="text-warm-300">{site.brandName}</span> ile {hero.title}
             <span className="block text-warm-300 mt-1">{hero.titleAccent}</span>
           </h1>
 
