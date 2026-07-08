@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useSiteConfig } from '@/contexts/SiteConfigContext';
+import { supabase } from '@/lib/supabase';
 
 interface FormData {
   name: string;
@@ -28,13 +29,23 @@ export default function Contact() {
     setSubmitState('submitting');
 
     try {
-      const res = await fetch(site.contact.formspreeEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) throw new Error('Formspree error');
+      if (supabase) {
+        const { error } = await supabase.from('contacts').insert({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          message: formData.message,
+        });
+        if (error) throw error;
+      } else {
+        // fallback: Formspree
+        const res = await fetch(site.contact.formspreeEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        if (!res.ok) throw new Error('Formspree error');
+      }
 
       setSubmitState('success');
       setFormData(INITIAL_FORM);
