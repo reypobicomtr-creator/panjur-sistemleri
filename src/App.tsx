@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import Privacy from './components/Privacy';
 import Terms from './components/Terms';
 import WhatsAppButton from './components/WhatsAppButton';
+import Landing from './pages/Landing';
 import AdminLayout from './pages/admin/AdminLayout';
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
@@ -58,6 +59,7 @@ export default function App() {
       <AuthProvider>
         <SiteConfigProvider>
         <Routes>
+          <Route path="/tanitim" element={<Landing />} />
           <Route path="/" element={<PublicLayout />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
