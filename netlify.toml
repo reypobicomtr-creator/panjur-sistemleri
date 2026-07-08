@@ -1,0 +1,12 @@
+# Netlify Deploy Config — PanjurMax
+# Bu dosyayı proje köküne koyun, Netlify otomatik algılar.
+
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# SPA için tüm yollar index.html'e yönlendirilir
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

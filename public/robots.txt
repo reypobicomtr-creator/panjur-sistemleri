@@ -1,0 +1,5 @@
+# PanjurMax - Robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://panjurmax.com/sitemap.xml
