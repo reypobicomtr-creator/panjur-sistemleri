@@ -34,9 +34,16 @@ function PriceSummaryCard({ p }: { p: PriceBreakdown }) {
       <div className="border-t border-brand-200 pt-3 space-y-1.5">
         <div className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Birim Fiyat Kırılımı</div>
         <div className="flex justify-between text-gray-700">
-          <span>Malzeme ({p.area.toFixed(2)} m²)</span>
-          <span>{p.baseMaterialCost.toLocaleString('tr-TR')} ₺</span>
+          <span>Malzeme ({p.area.toFixed(2)} m² × {p.basePerM2.toLocaleString('tr-TR')} ₺/m²)</span>
+          <span>{(p.basePerM2 * p.area).toLocaleString('tr-TR')} ₺</span>
         </div>
+        {p.areaDiscountRate > 0 && (
+          <div className="flex justify-between text-green-600 font-medium text-xs">
+            <span>🌿 Alan indirimi (%{(p.areaDiscountRate * 100).toFixed(0)})</span>
+            <span>-{p.areaDiscountAmount.toLocaleString('tr-TR')} ₺</span>
+          </div>
+        )}
+
         {p.caseCost > 0 && (
           <div className="flex justify-between text-gray-700">
             <span>{p.caseLabel}</span>

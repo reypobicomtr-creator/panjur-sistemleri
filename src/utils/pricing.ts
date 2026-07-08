@@ -25,6 +25,9 @@ export interface FormState {
 
 export interface PriceBreakdown {
   productName: string;
+  basePerM2: number;
+  areaDiscountRate: number;
+  areaDiscountAmount: number;
   width: number;
   height: number;
   area: number;
@@ -101,9 +104,10 @@ export function calculatePrice(
 
   // 1) Malzeme fiyatı (kademeli)
   const basePerM2 = getBasePrice(products, shutterType);
-  const areaDiscount = getAreaDiscount(area, discounts);
-  const effectivePerM2 = basePerM2 * (1 - areaDiscount);
-  let baseMaterialCost = Math.max(effectivePerM2 * area, extraCosts.minMaterialCost);
+  const areaDiscountRate = getAreaDiscount(area, discounts);
+  const rawMaterial = basePerM2 * area;
+  const areaDiscountAmount = Math.round(rawMaterial * areaDiscountRate);
+  let baseMaterialCost = Math.max(rawMaterial - areaDiscountAmount, extraCosts.minMaterialCost);
   baseMaterialCost = Math.round(baseMaterialCost);
 
   // 2) Kasa tipi
@@ -149,6 +153,9 @@ export function calculatePrice(
 
   return {
     productName: PRODUCT_NAMES[shutterType],
+    basePerM2,
+    areaDiscountRate,
+    areaDiscountAmount,
     width: parseInt(form.width),
     height: parseInt(form.height),
     area,
