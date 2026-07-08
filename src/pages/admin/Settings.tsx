@@ -28,8 +28,10 @@ export default function Settings() {
     try {
       await updateSiteConfig(form as unknown as Record<string, unknown>);
       setMessage({ type: 'success', text: 'Ayarlar kaydedildi.' });
-    } catch {
-      setMessage({ type: 'error', text: 'Kaydedilirken hata oluştu.' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Bilinmeyen hata — konsola bakın.';
+      console.error('[Settings] Save error:', err);
+      setMessage({ type: 'error', text: `Kaydedilirken hata: ${msg}` });
     }
     setSaving(false);
   };
