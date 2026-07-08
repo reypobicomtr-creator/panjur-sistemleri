@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Save, AlertCircle } from 'lucide-react';
 import { getSiteConfig, updateSiteConfig } from '@/lib/db';
 import type { SiteConfigData } from '@/lib/config';
-import { DEFAULT_SITE_CONFIG } from '@/lib/config';
+import { DEFAULT_SITE_CONFIG, clearConfigCache } from '@/lib/config';
 
 export default function Settings() {
   const [form, setForm] = useState<SiteConfigData>(DEFAULT_SITE_CONFIG);
@@ -27,6 +27,7 @@ export default function Settings() {
     setMessage(null);
     try {
       await updateSiteConfig(form as unknown as Record<string, unknown>);
+      clearConfigCache();
       setMessage({ type: 'success', text: 'Ayarlar kaydedildi.' });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Bilinmeyen hata — konsola bakın.';

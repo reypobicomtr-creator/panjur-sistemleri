@@ -6,7 +6,7 @@ import {
   type Product,
 } from '@/lib/db';
 import type { PricingConfigData, CaseType as CaseTypeConfig, AreaDiscount, ExtraCosts, Discounts } from '@/lib/config';
-import { DEFAULT_PRICING_CONFIG } from '@/lib/config';
+import { DEFAULT_PRICING_CONFIG, clearConfigCache } from '@/lib/config';
 
 const PRODUCT_TYPES = [
   { type: 'aluminium', label: 'Alüminyum Panjur' },
@@ -42,6 +42,7 @@ export default function Pricing() {
     try {
       await Promise.all(products.map((p) => upsertProduct(p)));
       await updatePricingConfig(pricing);
+      clearConfigCache();
       showMessage('success', 'Tüm ayarlar kaydedildi.');
     } catch {
       showMessage('error', 'Kaydedilirken hata oluştu.');
