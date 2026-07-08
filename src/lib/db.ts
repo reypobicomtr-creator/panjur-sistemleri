@@ -47,7 +47,8 @@ export async function getSiteConfig(): Promise<Record<string, unknown>> {
 }
 
 export async function updateSiteConfig(data: Record<string, unknown>): Promise<void> {
-  await supabase.from('site_config').update({ data, updated_at: new Date().toISOString() }).eq('id', 1);
+  const { error } = await supabase.from('site_config').upsert({ id: 1, data, updated_at: new Date().toISOString() });
+  if (error) throw error;
 }
 
 /* ─── Products ───────────────────────────── */
